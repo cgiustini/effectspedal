@@ -39,7 +39,13 @@ _data = _data.tolist()
 
 # Get one note.
 idata = _data
-idata = idata[100:-1]
+# idata = idata[100:-1]
+idata = idata[42000:-1]
+
+# Resample 
+idata = idata[::64]
+samprate = samprate / 64
+
 idata = np.array(idata)
 N = len(idata)
 # idata = a[150000:475000]
@@ -49,23 +55,23 @@ f = fidx * samprate * (1.0 / float(N))
 w = 2 * np.pi * f
 wn = fidx * (1.0 / float(N)) * 2 * np.pi
 
-framesize = 64
-frames = []
+# framesize = 64
+# frames = []
 
-for i in range(len(idata) - framesize):
-	frames.append(idata[i:i+framesize])
+# for i in range(len(idata) - framesize):
+# 	frames.append(idata[i:i+framesize])
 
-iframes = []
-oframes = []
-for i in np.arange(50000, 50100):
-	frame = frames[i]
-	iframes.append(frame)
-	oframes.append(signal.lfilter([1.0], [1.0], frame))
+# iframes = []
+# oframes = []
+# for i in np.arange(50000, 50100):
+# 	frame = frames[i]
+# 	iframes.append(frame)
+# 	oframes.append(signal.lfilter([1.0], [1.0], frame))
 
 
 # Process
-b, a = signal.butter(2, 0.006, 'high')
-# b, a = signal.butter(2, 0.1, 'high')
+# b, a = signal.butter(2, 0.003, 'low')
+b, a = signal.butter(12, 0.1, 'low')
 w, h = signal.freqz(b, a, worN=wn)
 
 # Filter w lfilter.
@@ -75,21 +81,27 @@ an = len(a)
 bn = len(b)
 y = np.full_like(idata, 0)
 
+# wf_start = 0.003 
+# wf_start = 0.003
+# wf_stop = 0.05
+# wf = np.linspace(wf_start, wf_stop, len(idata))
+
 # IIR filter implementation.
-for i in range(5, len(idata)):
-	
+for i in range(20, 50):
+	# b, a = signal.butter(2, wf[i], 'low')
 	xidx = np.arange(i-bn+1, i+1)
 	yidx = np.arange(i-an+1, i)
 	y[i] = (np.sum(np.multiply(np.flip(b), idata[xidx])) - np.sum(np.multiply(np.flip(a[1:an]), y[yidx]))) / a[0]
+	print(y[i])
 
 # plt.figure()
-# plt.plot(wn, np.abs(np.fft.fft(idata)) / np.max(np.abs(np.fft.fft(idata))), '+-')
-# plt.plot(w, np.abs(np.fft.fft(odata)) / np.max(np.abs(np.fft.fft(odata))))
+plt.plot(wn, np.abs(np.fft.fft(idata)) / np.max(np.abs(np.fft.fft(idata))), '+-')
+plt.plot(w, np.abs(np.fft.fft(odata)) / np.max(np.abs(np.fft.fft(odata))))
 # plt.figure()
 # plt.plot(w, np.abs(np.fft.fft(y)) / np.max(np.abs(np.fft.fft(y))))
-# # plt.plot(w, np.abs(h) / np.max(abs(h)), '+-')
+plt.plot(w, np.abs(h) / np.max(abs(h)), '+-')
 
-odata = y
+odata = odata
 
 
 	# y[bn - 1] = (np.multiply(a, xn) - np.multiply(b[0:(bn - 1)], y[0:(bn - 1)])) / b[bn]
