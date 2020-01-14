@@ -39,6 +39,8 @@ _data = _data.tolist()
 
 # Get one note.
 idata = _data
+idata = idata[100:-1]
+idata = np.array(idata)
 N = len(idata)
 # idata = a[150000:475000]
 
@@ -66,15 +68,33 @@ b, a = signal.butter(2, 0.006, 'high')
 # b, a = signal.butter(2, 0.1, 'high')
 w, h = signal.freqz(b, a, worN=wn)
 
-
+# Filter w lfilter.
 odata = signal.lfilter(b, a, idata)
 
-plt.plot(wn, np.abs(np.fft.fft(idata)) / np.max(np.abs(np.fft.fft(idata))), '+-')
-plt.plot(w, np.abs(np.fft.fft(odata)) / np.max(np.abs(np.fft.fft(odata))))
-plt.plot(w, np.abs(h) / np.max(abs(h)), '+-')
+an = len(a)
+bn = len(b)
+y = np.full_like(idata, 0)
+
+# IIR filter implementation.
+for i in range(5, len(idata)):
+	
+	xidx = np.arange(i-bn+1, i+1)
+	yidx = np.arange(i-an+1, i)
+	y[i] = (np.sum(np.multiply(np.flip(b), idata[xidx])) - np.sum(np.multiply(np.flip(a[1:an]), y[yidx]))) / a[0]
+
+# plt.figure()
+# plt.plot(wn, np.abs(np.fft.fft(idata)) / np.max(np.abs(np.fft.fft(idata))), '+-')
+# plt.plot(w, np.abs(np.fft.fft(odata)) / np.max(np.abs(np.fft.fft(odata))))
+# plt.figure()
+# plt.plot(w, np.abs(np.fft.fft(y)) / np.max(np.abs(np.fft.fft(y))))
+# # plt.plot(w, np.abs(h) / np.max(abs(h)), '+-')
+
+odata = y
+
+
+	# y[bn - 1] = (np.multiply(a, xn) - np.multiply(b[0:(bn - 1)], y[0:(bn - 1)])) / b[bn]
 
 # idx = 50000
-
 
 
 
